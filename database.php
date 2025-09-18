@@ -4,7 +4,6 @@
         
         public function __construct() {
             try {
-                // Спочатку підключаємося до MySQL без конкретної бази даних
                 $pdoTemp = new PDO(
                     "mysql:host=" . Config::DB_HOST . ";charset=utf8",
                     Config::DB_USER,
@@ -12,10 +11,8 @@
                     [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
                 );
                 
-                // Створюємо базу даних якщо вона не існує
                 $pdoTemp->exec("CREATE DATABASE IF NOT EXISTS " . Config::DB_NAME . " CHARACTER SET utf8 COLLATE utf8_general_ci");
                 
-                // Тепер підключаємося до створеної бази даних
                 $this->pdo = new PDO(
                     "mysql:host=" . Config::DB_HOST . ";dbname=" . Config::DB_NAME . ";charset=utf8",
                     Config::DB_USER,
@@ -23,7 +20,7 @@
                     [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
                 );
                 
-                echo "<div class='db-status'>✅ База даних успішно підключена!</div>";
+                echo "<div class='db-status'>База даних успішно підключена!</div>";
                 
             } catch (PDOException $e) {
                 die("<div style='color: red; background: #ffebee; padding: 15px; margin: 10px 0; border-radius: 4px;'><strong>Помилка підключення до бази даних:</strong><br>" . $e->getMessage() . "<br><br><strong>Перевірте:</strong><ul><li>Чи запущений MySQL сервер?</li><li>Чи правильні дані для підключення (логін/пароль)?</li><li>Чи існує користувач з правами на створення баз даних?</li></ul></div>");

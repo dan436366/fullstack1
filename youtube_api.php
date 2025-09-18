@@ -8,28 +8,28 @@
             $this->apiUrl = Config::YOUTUBE_API_URL;
         }
         
-        // Основний метод для пошуку відео
+        // метод для пошуку відео
         public function searchVideos($query, $maxResults = 10) {
-            // Підготовка параметрів для API запиту
+
             $params = [
-                'part' => 'snippet',           // Частина відповіді (snippet містить основну інформацію)
-                'q' => $query,                 // Пошуковий запит
-                'type' => 'video',             // Тип контенту (тільки відео)
-                'maxResults' => $maxResults,   // Максимальна кількість результатів
-                'key' => $this->apiKey         // API ключ
+                'part' => 'snippet',           
+                'q' => $query,                
+                'type' => 'video',            
+                'maxResults' => $maxResults,   
+                'key' => $this->apiKey         
             ];
             
-            // Формування URL з параметрами
+            
             $url = $this->apiUrl . '?' . http_build_query($params);
             
-            // Виконання HTTP запиту
+            
             $response = $this->makeRequest($url);
             
             if ($response === false) {
                 return ['error' => 'Помилка виконання запиту до YouTube API'];
             }
             
-            // Декодування JSON відповіді
+           
             $data = json_decode($response, true);
             
             if (json_last_error() !== JSON_ERROR_NONE) {
@@ -41,7 +41,7 @@
         
         // Виконання HTTP запиту
         private function makeRequest($url) {
-            // Використовуємо cURL для HTTP запиту
+            
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -68,7 +68,7 @@
         }
     }
 
-    // Функція для редіректу (POST-Redirect-GET pattern)
+    // Функція для редіректу
     function redirectToSelf() {
         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
         $host = $_SERVER['HTTP_HOST'];
@@ -78,27 +78,25 @@
         exit();
     }
 
-    // Ініціалізація
+   
     $database = new Database();
-    $database->createTable(); // Створюємо таблицю при першому запуску
+    $database->createTable(); 
 
     $youtubeAPI = new YouTubeAPI();
 
-    // Обробка форми пошуку з POST-Redirect-GET pattern
+    // Обробка форми пошуку 
     if ($_POST && isset($_POST['search_query']) && !empty(trim($_POST['search_query']))) {
         $searchQuery = trim($_POST['search_query']);
         $maxResults = isset($_POST['max_results']) ? intval($_POST['max_results']) : 10;
         
-        // Виконуємо пошук через YouTube API
+        
         $apiResponse = $youtubeAPI->searchVideos($searchQuery, $maxResults);
         
         session_start();
         
         if (isset($apiResponse['error'])) {
-            // Зберігаємо помилку в сесії та редіректимо
             $_SESSION['error_message'] = $apiResponse['error'];
         } elseif (isset($apiResponse['items']) && !empty($apiResponse['items'])) {
-            // Зберігаємо результати в базу даних
             $savedCount = 0;
             foreach ($apiResponse['items'] as $video) {
                 if ($database->saveSearchResult($searchQuery, $video)) {
@@ -106,18 +104,15 @@
                 }
             }
             
-            // Зберігаємо повідомлення про успіх в сесії
             $_SESSION['success_message'] = "Знайдено " . count($apiResponse['items']) . " результатів. Збережено в базу: " . $savedCount . " записів.";
             $_SESSION['search_results'] = $apiResponse;
         } else {
             $_SESSION['error_message'] = "Результатів не знайдено";
         }
         
-        // Редіректимо на цю ж сторінку (POST-Redirect-GET)
         redirectToSelf();
     }
 
-    // Обробка повідомлень з сесії
     session_start();
     $errorMessage = null;
     $successMessage = null;
@@ -138,6 +133,5 @@
         unset($_SESSION['search_results']);
     }
 
-    // Отримуємо історію пошуків з бази даних
     $searchHistory = $database->getAllSearches();
 ?>
